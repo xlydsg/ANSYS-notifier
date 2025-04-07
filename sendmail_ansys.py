@@ -1,5 +1,5 @@
 # ----------------------------------------------
-# Script For Ansys Electronics Desktop Version 2021.2.0
+# Script Recorded by Ansys Electronics Desktop Version 2021.2.0
 # ----------------------------------------------
 import sys
 import os
@@ -50,12 +50,12 @@ def send_email(subject="HFSS Simulation Notification", body="Simulation finished
         AddWarningMessage("Mail send failed:"+ str(e))
         return False
 
-def send_serverchan(text):
+def send_serverchan(text, text2):
     SCKEY = "[您的SCKEY]"
     url = "https://sctapi.ftqq.com/{}.send".format(SCKEY) 
     wc = WebClient()
     wc.Headers.Add("Content-Type", "application/x-www-form-urlencoded")
-    post_data = "title=HFSS notification&desp=" + text
+    post_data = "title=" + text +"&desp=" + text2
     try:
         response = wc.UploadString(url, "POST", post_data)
         AddInfoMessage("ServerChan:"+ response)
@@ -69,20 +69,35 @@ try:
     # oProject = oDesktop.NewProject()
     # oDesign = oProject.InsertDesign("HFSS", "MyDesign", "", "")
     # oDesign.Analyze("Setup1")
-    
-    if send_email("HFSS Simulation Notification", "Simulation finished"):
-        AddInfoMessage("mail send success")
-    else:
-        AddWarningMessage("mail send failed")
+    oDesktop.ClearMessages("","",3)
+    oProject = oDesktop.SetActiveProject("20250331_TimeDomainSimulationTest")
+    oDesign = oProject.SetActiveDesign("0052_00_FullChainDC_includeLC_test")
+    oDesign.Analyze("Setup2")
+    oProject.Save()
+    e = oDesktop.GetMessages("","",0)
+    # oModule = oDesign.GetModule("Optimetrics")
+    # oModule.SolveSetup("ParametricSetup2")
+    # oProject.Save()
+    # oDesign.AnalyzeAll()
 
-    if send_serverchan("HFSS Simulation finished"):
+    
+    # if send_email("HFSS Simulation Notification", "Simulation finished"):
+    #     AddInfoMessage("mail send success")
+    # else:
+    #     AddWarningMessage("mail send failed")
+
+    if send_serverchan("HFSS Simulation finished", str(e)):
         AddInfoMessage("ServerChan send success")
     else:
         AddWarningMessage("ServerChan send failed")
 
 except Exception as e:
-    AddErrorMessage("simulation error " + str(e))
+    AddErrorMessage("Simulation failed: " + str(e))
     #send_email() #simulation failed
+    if send_serverchan("simulation error ", str(e)):
+        AddInfoMessage("ServerChan send success")
+    else:
+        AddWarningMessage("ServerChan send failed")
 
 
 finally:
